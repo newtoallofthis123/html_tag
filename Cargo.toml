@@ -1,0 +1,13 @@
+[package]
+name = "html_tag"
+version = "0.1.0"
+edition = "2021"
+authors = ["NoobScience <noobscience@duck.com>"]
+description = "An Enigmatic Way to use HTML in Rust"
+license = "MIT"
+repository = "https://github.com/newtoallofthis123/html_tag"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
