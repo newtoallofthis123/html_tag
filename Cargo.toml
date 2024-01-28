@@ -1,6 +1,6 @@
 [package]
 name = "html_tag"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["NoobScience <noobscience@duck.com>"]
 description = "An Enigmatic Way to use HTML in Rust"

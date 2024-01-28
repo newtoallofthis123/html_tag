@@ -168,14 +168,56 @@ impl HtmlTag {
         self.id = Some(id.to_string());
     }
 
-    /// Sets the styles of the current `HtmlTag`.
+    /// Sets the href of the current `HtmlTag`.
+    pub fn set_href(&mut self, href: &str) {
+        self.add_attribute("href", href);
+    }
+
+    /// Sets the style of the current `HtmlTag`.
     pub fn set_style(&mut self, style: &str) {
         self.add_attribute("style", style);
     }
 
-    /// Sets the href of the current `HtmlTag`.
-    pub fn set_href(&mut self, href: &str) {
-        self.add_attribute("href", href);
+    /// Chaining method for add_class
+    pub fn with_class(mut self, class_name: &str) -> Self {
+        self.add_class(class_name);
+        self
+    }
+
+    /// Chaining method for set_body
+    pub fn with_body(mut self, body: &str) -> Self {
+        self.set_body(body);
+        self
+    }
+
+    /// Chaining method for set_id
+    pub fn with_id(mut self, id: &str) -> Self {
+        self.set_id(id);
+        self
+    }
+
+    /// Chaining method for set_href
+    pub fn with_href(mut self, href: &str) -> Self {
+        self.set_href(href);
+        self
+    }
+
+    /// Chaining method for set_style
+    pub fn with_style(mut self, style: &str) -> Self {
+        self.set_style(style);
+        self
+    }
+
+    /// Chaining method for add_child
+    pub fn with_child(mut self, child: HtmlTag) -> Self {
+        self.add_child(child);
+        self
+    }
+
+    /// Chaining method for add_attribute
+    pub fn with_attribute(mut self, key: &str, value: &str) -> Self {
+        self.add_attribute(key, value);
+        self
     }
 
     fn get_tags(tag_type: &TagType) -> (String, String) {
