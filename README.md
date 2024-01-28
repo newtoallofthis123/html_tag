@@ -64,9 +64,9 @@ Hence, you can do something like this for example
 let mut html = HtmlTag::new("div");
 let interested = true
 if interested {
-    html.add_child(HtmlTag::new("p").set_body("I am interested"));
+    html.with_child(HtmlTag::new("p").with_body("I am interested"));
 } else {
-    html.add_child(HtmlTag::new("p").set_body("I am not interested"));
+    html.with_child(HtmlTag::new("p").with_body("I am not interested"));
 }
 ```
 

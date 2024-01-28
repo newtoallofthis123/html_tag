@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
-use crate::tags::TagType;
+use crate::{
+    styles::{convert_to_styles, sanitize_styles, Class, Style, StyleSheet},
+    tags::TagType,
+};
 
 /// A struct representing an HTML tag.
 /// The concept of a HTML tag is represented using this
@@ -59,6 +62,7 @@ use crate::tags::TagType;
 /// the methods provided.
 #[derive(Clone, PartialEq, Eq)]
 pub struct HtmlTag {
+    pub pre_content: Option<String>,
     pub tag_type: TagType,
     pub class_names: Vec<String>,
     pub id: Option<String>,
@@ -90,6 +94,7 @@ impl HtmlTag {
     /// Essentially a initializer for the struct.
     pub fn new(tag_type: &str) -> HtmlTag {
         HtmlTag {
+            pre_content: None,
             tag_type: TagType::from(tag_type),
             class_names: Vec::new(),
             id: None,
@@ -118,6 +123,7 @@ impl HtmlTag {
     /// This is the most commonly used scaffold for creating a new `HtmlTag`.
     pub fn fresh(tag_type: TagType, body: Option<&str>, class_names: Vec<&str>) -> HtmlTag {
         HtmlTag {
+            pre_content: None,
             tag_type,
             class_names: class_names.iter().map(|s| s.to_string()).collect(),
             id: None,
@@ -174,8 +180,35 @@ impl HtmlTag {
     }
 
     /// Sets the style of the current `HtmlTag`.
-    pub fn set_style(&mut self, style: &str) {
-        self.add_attribute("style", style);
+    pub fn set_style(&mut self, key: &str, value: &str) {
+        self.add_attribute("style", &format!("{}: {};", key, value));
+    }
+
+    /// Construct and applies styles
+    /// The Class struct is a HashMap<String, String>
+    /// This is to represent the key-value pairs of the styles
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use html_tag::HtmlTag;
+    /// use html_tag::styles::Class;
+    ///
+    /// let mut div = HtmlTag::new("div");
+    /// let mut font_style = Class::new();
+    /// font_style.insert("font-size".to_string(), "20px".to_string());
+    /// font_style.insert("font-family".to_string(), "sans-serif".to_string());
+    /// div.add_styles(font_style);
+    ///
+    /// assert_eq!(div.to_html(), "<div style=\"font-family: sans-serif;font-size: 20px;\"></div>");
+    pub fn add_styles(&mut self, styles: Class) {
+        self.add_attribute("style", convert_to_styles(styles).as_str());
+    }
+
+    /// Chaining method for add_styles
+    pub fn with_styles(mut self, styles: Class) -> Self {
+        self.add_styles(styles);
+        self
     }
 
     /// Chaining method for add_class
@@ -203,8 +236,8 @@ impl HtmlTag {
     }
 
     /// Chaining method for set_style
-    pub fn with_style(mut self, style: &str) -> Self {
-        self.set_style(style);
+    pub fn with_style(mut self, key: &str, value: &str) -> Self {
+        self.set_style(key, value);
         self
     }
 
@@ -220,6 +253,17 @@ impl HtmlTag {
         self
     }
 
+    /// Sets the pre tag of the current `HtmlTag`.
+    pub fn set_pre_content(&mut self, body: &str) {
+        self.pre_content = Some(body.to_string());
+    }
+
+    /// Embed custom StyleSheet
+    pub fn embed_style_sheet(mut self, style_sheet: &StyleSheet) -> Self {
+        self.set_pre_content(sanitize_styles(style_sheet.get_with_tag()).as_str());
+        self
+    }
+
     fn get_tags(tag_type: &TagType) -> (String, String) {
         let tag = format!("<{}", tag_type.html());
         let closing_tag = format!("</{}>", tag_type.html());
@@ -227,7 +271,11 @@ impl HtmlTag {
     }
 
     fn partial_convert(&self) -> String {
-        let mut html_to_return = String::new();
+        let mut html_to_return = if let Some(pre_tag) = &self.pre_content {
+            pre_tag.to_string()
+        } else {
+            String::new()
+        };
         let (opening_tag, _) = HtmlTag::get_tags(&self.tag_type);
         html_to_return.push_str(&opening_tag);
 
@@ -350,6 +398,11 @@ impl HtmlTag {
         html.push_str(&closing_tag);
 
         html
+    }
+
+    /// Just a fancy name for `to_html`.
+    pub fn construct(&self) -> String {
+        self.to_html()
     }
 }
 

@@ -3,7 +3,7 @@ use html_tag::HtmlTag;
 fn main() {
     let mut main = HtmlTag::new("div")
         .with_id("main")
-        .with_style("color: red;");
+        .with_style("color", "red");
 
     let to_add = ["Ram", "Jake", "John", "Jill", "Jenny"];
 

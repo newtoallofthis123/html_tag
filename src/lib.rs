@@ -1,68 +1,69 @@
 //! # HTMLTag
 //! The enigmatic way to use HTML in Rust.
-//! 
+//!
 //! HTMLTag is a crate that allows you to create HTML tags in a simple and
 //! intuitive way.
-//! It aims to replace the need for using HTML in the form of strings or the heavy use of 
+//! It aims to replace the need for using HTML in the form of strings or the heavy use of
 //! macros in your code to make it more readable and maintainable.
-//! 
+//!
 //! ## Idea
-//! 
+//!
 //! Strings are not always the best way to represent HTML in your code.
 //! You could probably use macros to make it more readable, but that is not always the best
 //! solution.
-//! 
+//!
 //! Moreover, you could probably use a templating engine or a library like `html_builder` to
 //! generate large HTML documents, however, we are talking niche use cases here.
-//! 
+//!
 //! The idea is to make it easy to create HTML tags in as simple and as "Rusty" way as possible.
-//! 
+//!
 //! ## Usage
-//! 
+//!
 //! ```rust
 //! use html_tag::HtmlTag;
-//! 
+//!
 //! let mut a = HtmlTag::new("a");
 //! a.set_body("Hello World");
 //! a.add_class("test");
 //! a.set_href("https://example.com");
-//! 
+//!
 //! assert_eq!(a.to_html(), "<a class=\"test\" href=\"https://example.com\">Hello World</a>");
 //! ```
-//! 
-//! As apparent from the example above, you can essentially let HtmlTag act as a builder or 
+//!
+//! As apparent from the example above, you can essentially let HtmlTag act as a builder or
 //! rather a wrapper around the abstract concept of a HTML tag.
-//! 
+//!
 //! You can also nest tags, like so:
-//! 
+//!
 //! ```rust
 //! use html_tag::HtmlTag;
-//! 
+//!
 //! let mut div = HtmlTag::new("div");
 //! div.add_class("test");
 //! let mut p = HtmlTag::new("p");
 //! p.set_body("Hello World");
 //! div.add_child(p);
-//! 
+//!
 //! assert_eq!(div.to_html(), "<div class=\"test\"><p>Hello World</p></div>");
 //! ```
-//! 
+//!
 //! ## Main Features
-//! 
+//!
 //! - Create HTML tags in a simple and intuitive way.
+//! - Chain methods to make it more readable.
 //! - Nest tags inside each other.
 //! - Use custom tags.
 //! - Use custom attributes.
 //! - Use `Display` trait to print the HTML tag.
 //! - No dependencies.
-//! 
+//!
 //! ## Contributing
-//! 
+//!
 //! Contributions are welcome. Please open an issue or a PR if you find any bugs or have any
 //! suggestions.
-//! 
+//!
 //! ## License
-//! 
+//!
 //! This project is licensed under the MIT License.
 
 /// HTMLTag Related Stuff
@@ -70,7 +71,11 @@ pub mod html;
 /// TagType Related Stuff
 pub mod tags;
 
+/// StyleSheet Related Stuff
+pub mod styles;
+
 pub use crate::html::HtmlTag;
+pub use crate::styles::{Class, Style, StyleSheet};
 pub use crate::tags::TagType;
 
 // Tests cause they are important
@@ -112,10 +117,47 @@ mod tests {
         let mut div = html::HtmlTag::new("div");
         div.add_class("test");
         div.set_id("test");
-        div.set_style("color: red;");
+        div.set_style("color", "red");
         let mut p = html::HtmlTag::new("p");
         p.set_body("Hello World");
         div.add_child(p);
+        assert_eq!(div.to_html(), actual_html);
+    }
+
+    #[test]
+    fn test_with_add_styles() {
+        let actual_html =
+            "<div id=\"test\" class=\"test\" style=\"color: red;\"><p>Hello World</p></div>";
+        let mut div = html::HtmlTag::new("div")
+            .with_id("test")
+            .with_class("test")
+            .with_style("color", "red");
+        let mut p = html::HtmlTag::new("p");
+        p.set_body("Hello World");
+        div.add_child(p);
+        assert_eq!(div.to_html(), actual_html);
+    }
+
+    #[test]
+    fn test_styles_embed() {
+        let actual_html = "<style>.wow{color:red;font-family:sans-serif;font-size:20px;}h1{color:blue;font-size:30px;}</style><div id=\"wow\"><h1 class=\"wow\">Hello World</h1></div>";
+        let mut style = styles::StyleSheet::new();
+        style.add_style(".wow", "color", "red");
+        style.add_style(".wow", "font-size", "20px");
+        style.add_style(".wow", "font-family", "sans-serif");
+
+        style.add_style("h1", "color", "blue");
+        style.add_style("h1", "font-size", "30px");
+
+        let div = html::HtmlTag::new("div")
+            .with_id("wow")
+            .embed_style_sheet(&style)
+            .with_child(
+                html::HtmlTag::new("h1")
+                    .with_class("wow")
+                    .with_body("Hello World"),
+            );
+
         assert_eq!(div.to_html(), actual_html);
     }
 
@@ -125,7 +167,7 @@ mod tests {
         let mut a = html::HtmlTag::new("a");
         a.set_href("https://www.google.com");
         a.set_body("Hello World");
-        assert_eq!(a.to_html(), actual_html);
+        assert_eq!(a.construct(), actual_html);
     }
 
     #[test]
@@ -137,12 +179,26 @@ mod tests {
     }
 
     #[test]
+    fn test_chaining() {
+        let actual_html =
+            "<div id=\"test\" class=\"test\" style=\"color: red;\"><p>Hello World</p></div>";
+        let mut div = html::HtmlTag::new("div")
+            .with_id("test")
+            .with_class("test")
+            .with_style("color", "red");
+        let mut p = html::HtmlTag::new("p");
+        p.set_body("Hello World");
+        div.add_child(p);
+        assert_eq!(div.to_html(), actual_html);
+    }
+
+    #[test]
     fn test_custom_attributes() {
         let actual_html = "<div id=\"test\" class=\"test\" style=\"color: red;\" data-test=\"test\"><p>Hello World</p></div>";
         let mut div = html::HtmlTag::new("div");
         div.add_class("test");
         div.set_id("test");
-        div.set_style("color: red;");
+        div.set_style("color", "red");
         div.add_attribute("data-test", "test");
         let mut p = html::HtmlTag::new("p");
         p.set_body("Hello World");
